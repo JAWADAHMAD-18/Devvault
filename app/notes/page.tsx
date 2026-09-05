@@ -64,6 +64,22 @@ export default function Notes() {
     }
   };
 
+  const handleDelete = async ({id}:{id:string}) => {
+    try {
+      const response = await fetch(`/api/notes/${id}`, {
+        method: "DELETE",
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message);
+        return;
+      }
+      fetchData();
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -144,6 +160,17 @@ export default function Notes() {
                     </span>
                   ))}
                 </div>
+              )}
+              <button
+                onClick={() => handleDelete({ id: note._id })}
+                className="mt-4 rounded-md bg-[#E8A33D] px-4 py-2 text-sm font-medium text-[#12141C] transition hover:bg-[#f0b158] active:bg-[#d8933a]"
+              >
+                Delete
+              </button>
+              {error && (
+                <p className="mt-4 rounded-md border border-red-900 bg-red-950/50 px-3 py-2 text-sm text-red-300">
+                  {error}
+                </p>
               )}
             </div>
           ))}
