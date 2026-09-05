@@ -16,6 +16,10 @@ export default function Notes() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const [editingContent, setEditingContent] = useState("");
+  const [editingTags, setEditingTags] = useState("");
   const router = useRouter();
 
   const fetchData = async () => {
@@ -63,6 +67,30 @@ export default function Notes() {
       setLoading(false);
     }
   };
+  const handleUpdate=async (e,id:string)=>{
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const tagsArray = editingTags.split(",").map((tag) => tag.trim());
+      const response = await fetch(`/api/notes/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: editingTitle, content: editingContent, tags: tagsArray }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message);
+        setLoading(false);
+        return;
+      }
+      fetchData();
+      setEditingId(null);
+      setLoading(false);
+    } catch (error) {
+      setError(error.message);
+      setLoading(false);
+    }
+  }
 
   const handleDelete = async ({id}:{id:string}) => {
     try {
@@ -161,6 +189,58 @@ export default function Notes() {
                   ))}
                 </div>
               )}
+              {editingId === note._id && (
+                <form
+                  onSubmit={(e) => handleUpdate(e, note._id)}
+                  className="mt-4 flex flex-col gap-4"
+                >
+                  <input
+                    type="text"
+                    placeholder="Title"
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    className="rounded-md border border-[#2A2E3F] bg-[#12141C] px-3 py-2 text-sm text-[#E8E9ED] placeholder-[#565B70] outline-none transition focus:border-[#E8A33D] focus:ring-1 focus:ring-[#E8A33D]"
+                  />
+                  <textarea
+                    placeholder="Content"
+                    value={editingContent}
+                    onChange={(e) => setEditingContent(e.target.value)}
+                    rows={3}  
+                  className="resize-none rounded-md border border-[#2A2E3F] bg-[#12141C] px-3 py-2 text-sm text-[#E8E9ED] placeholder-[#565B70] outline-none transition focus:border-[#E8A33D] focus:ring-1 focus:ring-[#E8A33D]"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Tags (comma separated)"
+                    value={editingTags}
+                    onChange={(e) => setEditingTags(e.target.value)}
+                    className="rounded-md border border-[#2A2E3F] bg-[#12141C] px-3 py-2 text-sm text-[#E8E9ED] placeholder-[#565B70] outline-none transition focus:border-[#E8A33D] focus:ring-1 focus:ring-[#E8A33D]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEditingId(null)}
+                    className="self-start rounded-md bg-[#E8A33D] px-4 py-2 text-sm font-medium text-[#12141C] transition hover:bg-[#f0b158] active:bg-[#d8933a]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="self-start rounded-md bg-[#E8A33D] px-4 py-2 text-sm font-medium text-[#12141C] transition hover:bg-[#f0b158] active:bg-[#d8933a]"
+                  >
+                    Update note
+                  </button>
+                </form>
+              )}
+              <button
+                onClick={() => {
+                  setEditingId(note._id);
+                  setEditingTitle(note.title);
+                  setEditingContent(note.content);
+                  setEditingTags(note.tags?.join(", ") || "");
+                }}
+                className="mt-4 rounded-md bg-[#E8A33D] px-4 py-2 text-sm font-medium text-[#12141C] transition hover:bg-[#f0b158] active:bg-[#d8933a]"
+              >
+                Edit
+              </button>
               <button
                 onClick={() => handleDelete({ id: note._id })}
                 className="mt-4 rounded-md bg-[#E8A33D] px-4 py-2 text-sm font-medium text-[#12141C] transition hover:bg-[#f0b158] active:bg-[#d8933a]"
